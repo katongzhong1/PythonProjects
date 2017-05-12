@@ -18,7 +18,7 @@ def baidu_tieba(url,begin_page,end_page):
         print '正在下载第' + str(i) + '个网页，并将其存储为' + sName + '......'
         f = open(sName,'w+')
         m = urllib2.urlopen(url + str(i)).read()
-        f.write(m)
+        f.write(m)z
         f.close()
 
 #-------- 在这里输入参数 ------------------

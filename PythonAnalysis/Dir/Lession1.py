@@ -12,7 +12,48 @@
 
 # ---------------------------------------
 # 一、Python 总体架构
-    # 1. 模块、库及用户自定义库
-    # 2. 运行时环境：a.对象/类型系统(Object/Type structures); b.
+#   1. 模块、库及用户自定义库
+#   2. 运行时环境：
+#       a.对象/类型系统(Object/Type structures):
+#         ==>包含各种内建对象, 及各种用户自定义的类型和对象
+#       b.内存分配器(Memory Allocator):
+#         ==>全权负责创建对象时, 对内存的申请工作
+#       c.运行时状态信息(Current State of Python):
+#         ==>维护了解释器在执行字节码时不同的状态之间切换的动作
+#   3. 核心--解释器 (或称虚拟机)
+#       a. 流程走向:
+#         ==>a. Scanner(词法分析):
+#               ==>将文件输入的源代码或从命令行输入的代码切分为一个个的token
+#         ==>b. Parser(语法分析):
+#               ==>在 Scanner 的结果上进行分析，建立抽象语法树(ATS)
+#         ==>c. Compiler():
+#               ==>根据建立的 ATS 生成指令集合 python 字节码(byte code)
+#         ==>d. Code Evaluator(虚拟机):
+#               ==>执行字节码
+#
+#二、Python 对象
+#   1. 对象的分类
+#      ==> a. fundamental对象: 类型对象
+#             ==> type
+#      ==> b. Numeric 对象: 数值对象
+#             ==> 1. integer
+#             ==> 2. float
+#             ==> 3. boolean
+#      ==> c. Sequence对象: 容纳其他对象的序列集合对象
+#             ==> 1. string
+#             ==> 2. list
+#             ==> 3. tuple
+#      ==> d. Mapping 对象: 类似于C++中 map的关联对象
+#             ==> dict
+#      ==> e. Internal 对象: Python虚拟机在运行时内部使用的对象
+#             ==> 1. function
+#             ==> 2. code
+#             ==> 3. frame
+#             ==> 4. module
+#             ==> 5. method
+#
+#   2.整数对象
+#     ==> a. 对象池机制
+#     ==> b.
 #
 # ---------------------------------------

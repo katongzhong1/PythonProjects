@@ -1,11 +1,11 @@
 torrents:
-  pid: 39362
-  time: 2017-03-02 14:47:15
-  run time: day: 0, hour: 0, minute: 15, second: 1
+  pid: 60819
+  time: 2017-03-15 13:16:35
+  run time: day: 0, hour: 0, minute: 15, second: 0
   start port: 32900
   collect session num: 20
-  info hash nums from get peers: 119
-  torrent collection rate: 7.918884 /minute
-  current torrent count: 119
-  total torrent count: 185
+  info hash nums from get peers: 0
+  torrent collection rate: 0.000000 /minute
+  current torrent count: 0
+  total torrent count: 188
 

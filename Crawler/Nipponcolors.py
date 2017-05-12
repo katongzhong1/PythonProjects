@@ -11,11 +11,12 @@
 
 import urllib2
 import re
+import json
 
 URL = "http://nipponcolors.com/"
 
 
-# ----------- 加载处理糗事百科 -----------
+# ----------- 加载处理颜色百科 -----------
 class SpiderModel:
     def __init__(self):
         pass
@@ -23,10 +24,23 @@ class SpiderModel:
     # 将所有的段子都扣出来，添加到列表中并且返回列表
     def get_page(self):
         items = self.get_arr("", '<li id="col.*?"><div><a href=.*?>(.*?)</a></div></li>', '')
+        arr = []
         for item in items:
-            print item
-            self.get_RGB(item)
-        return items
+            arr.append(self.get_list(item, self.get_RGB(item)))
+        with open('data.json', 'wb') as json_file:
+            json_file.write(json.dumps(arr))
+
+    @staticmethod
+    def get_list(name, param):
+        arr = name.split(", ")
+        list = {}
+        list["name_c"] = arr[0]
+        list["name_e"] = arr[1]
+        list["hex"] = param[1][0]
+        list["r"] = param[0][0]
+        list["g"] = param[0][1]
+        list["b"] = param[0][2]
+        return list
 
     # 用于取到色值
     def get_RGB(self, param):

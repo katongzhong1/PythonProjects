@@ -9,6 +9,9 @@ import json
 import random
 import traceback as tb
 import pygame
+import os.path as pt
+import shutil
+import tempfile
 
 import libtorrent as lt
 
@@ -89,9 +92,11 @@ class Collector(object):
                     self._meta_list[info_hash] += 1
                 else:
                     self._meta_list[info_hash] = 1
+                    self.magnet2torrent(info_hash)
                     self._current_meta_count += 1
             elif isinstance(alert, lt.dht_get_peers_alert):
                 info_hash = alert.info_hash.to_string().encode('hex')
+                self.magnet2torrent(info_hash)
                 if info_hash in self._meta_list:
                     self._meta_list[info_hash] += 1
                 else:
@@ -140,7 +145,60 @@ class Collector(object):
                       'duplicate_is_error': True,
                       'url': link}
             session.async_add_torrent(params)
+            self.magnet2torrent(link)
             count += 1
+
+
+    def magnet2torrent(self, magnet, output_name=None):
+        print(magnet)
+        magnet = "magnet:?xt=urn:btih:EC632808A787708B1605821F8945AD107CA862B4&dn=[2016.03.14]人在囧途之港囧[2015年中国大陆(BD)][喜剧]（帝国出品）"
+        "http://reflektor.karmorra.info/torrent/EC632808A787708B1605821F8945AD107CA862B4.torrent"
+
+
+        if output_name and \
+                not pt.isdir(output_name) and \
+                not pt.isdir(pt.dirname(pt.abspath(output_name))):
+            print("Invalid output folder: " + pt.dirname(pt.abspath(output_name)))
+            print("")
+            sys.exit(0)
+        tempdir = tempfile.mkdtemp()
+        ses = lt.session()
+        params = {
+            'save_path': tempdir,
+            'storage_mode': lt.storage_mode_t(2),
+        }
+        handle = lt.add_magnet_uri(ses, magnet, params)
+        print("Downloading Metadata (this may take a while)")
+        while (not handle.has_metadata()):
+            try:
+                time.sleep(1)
+            except KeyboardInterrupt:
+                print("Aborting...")
+                ses.pause()
+                print("Cleanup dir " + tempdir)
+                shutil.rmtree(tempdir)
+                sys.exit(0)
+        ses.pause()
+        print("Done")
+        torinfo = handle.get_torrent_info()
+        torfile = lt.create_torrent(torinfo)
+        output = pt.abspath(torinfo.name() + ".torrent")
+        if output_name:
+            if pt.isdir(output_name):
+                output = pt.abspath(pt.join(
+                    output_name, torinfo.name() + ".torrent"))
+            elif pt.isdir(pt.dirname(pt.abspath(output_name))):
+                output = pt.abspath(output_name)
+        print("Saving torrent file here : " + output + " ...")
+        torcontent = lt.bencode(torfile.generate())
+        f = open(output, "wb")
+        f.write(lt.bencode(torfile.generate()))
+        f.close()
+        print("Saved! Cleaning up dir: " + tempdir)
+        ses.remove_torrent(handle)
+        shutil.rmtree(tempdir)
+        return output
+
 
     def start_work(self):
         # 清理屏幕
@@ -199,17 +257,16 @@ class Collector(object):
             for torrent in torrents:
                 session.remove_torrent(torrent)
 
+result_file = 'result.json'
+stat_file = 'collector.stat'
+#
+sd = Collector(session_nums=20,
+                result_file=result_file,
+                stat_file=stat_file)
+# # 创建p2p客户端
+# sd.create_session(32900)
+# sd.start_work()
+sd.magnet2torrent("4cb6a20fe0d473cf66dc9bad5eb516e34bd7e452")
 
-if __name__ == '__main__':
 
 
-    result_file = 'result.json'
-    stat_file = 'collector.stat'
-
-    # 创建采集对象
-    sd = Collector(session_nums=20,
-                   result_file=result_file,
-                   stat_file=stat_file)
-    # 创建p2p客户端
-    sd.create_session(32900)
-    sd.start_work()
