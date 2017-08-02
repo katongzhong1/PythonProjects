@@ -8,7 +8,7 @@
 # ---------------------------------------
 
 URI = 'https://nj02all02.baidupcs.com/file/b6b00069541e959360f9c75c6a225b83?bkt=p3-1400b6b00069541e959360f9c75c6a225b83dfc4573400000000b564&fid=4010289530-250528-975010193180837&time=1494318606&sign=FDTAXGERLBHS-DCb740ccc5511e5e8fedcff06b081203-LCvx8cYl5UnjYJarbwfPIYZ3AEk%3D&to=70&size=46436&sta_dx=46436&sta_cs=0&sta_ft=zip&sta_ct=0&sta_mt=0&fm2=MH,Guangzhou,Netizen-anywhere,,guangdong,ct&newver=1&newfm=1&secfm=1&flow_ver=3&pkey=1400b6b00069541e959360f9c75c6a225b83dfc4573400000000b564&sl=75300943&expires=8h&rt=pr&r=720949158&mlogid=2984628044235289627&vuk=4010289530&vbdid=3052596471&fin=SZExample.zip&fn=SZExample.zip&rtype=1&iv=1&dp-logid=2984628044235289627&dp-callid=0.1.1&hps=1&csl=418&csign=4nv66jMqsxCvXGAk0lWhAKgeORo%3D&by=themis'
-FLI = '/Users/wushengzhong/Desktop/valid/SZEnum'
+FLI = '/Users/wushengzhong/Desktop'
 
 import zipfile
 import os
@@ -39,7 +39,7 @@ def un_zip(file_name, path):
 # 创建工程
 # ==> 思路: 从一个现有的工程修改名字到新工程
 def create_proj(path, name, oldname):
-    un_zip('/Users/wushengzhong/Desktop/valid/SZExample.zip', path)
+    un_zip('/Users/wushengzhong/Desktop/SZEnum.zip', path)
     # 修改文件内容 修改该文件名
     project_name = name
     arr.append(oldname+'.xcscheme')
@@ -129,19 +129,19 @@ def create_file(path, list):
 # 生成ViewController
 # ======================================================================================================================
 
-def create_vc(path, name, list):
+def create_vc(path, name, list, isGroup=None):
     if os.path.exists(path) == False:
         os.makedirs(path)
     create_vc_h(path, name)
-    create_vc_m(path, name, list)
+    create_vc_m(path, name, list, isGroup)
 
 def create_vc_h(path, name):
     file_path = path + '/' + name + '.h'
     create_file(file_path, h_vc_file(name))
 
-def create_vc_m(path, name, list):
+def create_vc_m(path, name, list, isGroup=None):
     file_path = path + '/' + name + '.m'
-    create_file(file_path, m_vc_file(name, list))
+    create_file(file_path, m_vc_file(name, list, isGroup))
 
 # ======================================================================================================================
 # .h 文件
@@ -186,10 +186,10 @@ def h_vc_static(name):
 # ======================================================================================================================
 
 def m_file(name, list):
-    return note(name) + m_h(name, list) + vd(name) + view(list) + layout(list) + getter(list) + m_end()
+    return note(name) + m_h(name, list) + vd(name) + view(list) + layout(list) + tab_delegate(list, False) + getter(list) + m_end()
 
-def m_vc_file(name, list):
-    return note(name) + m_h(name, list) + vd_vc(name) + vc(list) + vc_layout(list) + getter(list) + m_end()
+def m_vc_file(name, list, isGroup):
+    return note(name) + m_h(name, list) + vd_vc(name) + vc(list) + vc_layout(list) + tab_delegate(list, isGroup) + getter(list) + m_end()
 
 # ======================================================================================================================
 # .m  头部
@@ -203,7 +203,7 @@ def m_vc_h(name, list):
     return m_h_begin(name, list) + m_h_param(list) + m_h_vc_param_inherent() + m_end() + m_implent(name)
 
 def m_h_begin(name, list):
-    arr = ['#import "%s"\n\n\n' % name,
+    arr = ['#import "%s.h"\n\n' % name,
             '@interface %s ()\n' % name]
     for t in [t for t in list if t[0] == 'tab']:
         str = '#define CellClass @"%sCell"\n' % t[1]
@@ -302,7 +302,7 @@ def vc_loaddata():
             '    }];\n',
             '}\n\n',
             '- (void)configData {\n',
-            '    [self addView];\n',
+            '    [self addViews];\n',
             '}\n\n']
 
 def view_init():
@@ -317,10 +317,10 @@ def view_init():
             '}\n\n']
 
 def view_add(list):
-    return ['   [self addSubview:self.%s]\n' % name for (ptype, name, note) in list]
+    return ['    [self addSubview:self.%s];\n' % name for (ptype, name, note) in list]
 
 def vc_add(list):
-    return ['   [self.view addSubview:self.%s]\n' % name for (ptype, name, note) in list]
+    return ['    [self.view addSubview:self.%s];\n' % name for (ptype, name, note) in list]
 
 # ======================================================================================================================
 # Layout 部分
@@ -359,7 +359,96 @@ def layout_end():
             '}\n\n']
 
 # ======================================================================================================================
-# Layout 部分
+# Delegate 部分
+# ======================================================================================================================
+
+def tab_delegate(list, isGroup):
+    arr = [ptype for (ptype, name, note) in list]
+    if 'tab' in arr:
+        if isGroup:
+            return tab_group()
+        return tab_plain()
+    return ['']
+
+def tab_group():
+    return ['#pragma mark - TableDelegate\n',
+            '///=============================================================================\n',
+            '/// @name TableDelegate\n',
+            '///=============================================================================\n\n',
+            '- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {\n',
+            '    return [self.dataArray[section] count];\n',
+            '}\n\n',
+            '- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView {\n',
+            '    return self.dataArray.count;\n',
+            '}\n\n',
+            '- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(self.class) forIndexPath:indexPath];\n',
+            '    cell.selectionStyle = UITableViewCellSelectionStyleNone;\n',
+            '    if (![cell conformsToProtocol:@protocol(ViewDelegate)]) return cell;\n',
+            '    id model = self.dataArray[indexPath.section][indexPath.row];\n',
+            '    id data = RACTuplePack(model, indexPath, @([self.dataArray[indexPath.section] count]-1==indexPath.row));\n',
+            '    @weakify(self);\n',
+            '    [(id<ViewDelegate>)cell viewModel:data action:^(id  _Nullable x) {\n',
+            '        @strongify(self);\n',
+            '        if ([self conformsToProtocol:@protocol(ViewDelegate)] && [self respondsToSelector:@selector(viewAction:)]) {\n',
+            '            return [(id<ViewDelegate>)self viewAction:x];\n',
+            '        }\n',
+            '    }];\n',
+            '    return cell;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    return 49;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {\n',
+            '    return 10;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {\n',
+            '    return 0.001;\n',
+            '}\n\n',
+            '- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    NSString *uri = self.dataArray[indexPath.section][indexPath.row].target;\n',
+            '    [SZRouter pushUri:uri navi:self.navigationController];\n',
+            '}\n\n']
+
+def tab_plain():
+    return ['#pragma mark - TableDelegate\n',
+            '///=============================================================================\n',
+            '/// @name TableDelegate\n',
+            '///=============================================================================\n\n',
+            '- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {\n',
+            '    return self.dataArray.count;\n',
+            '}\n\n',
+            '- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:NSStringFromClass(self.class) forIndexPath:indexPath];\n',
+            '    cell.selectionStyle = UITableViewCellSelectionStyleNone;\n',
+            '    if (![cell conformsToProtocol:@protocol(ViewDelegate)]) return cell;\n',
+            '    id model = self.dataArray[indexPath.row];\n',
+            '    id data = RACTuplePack(model, indexPath, @([self.dataArray count]-1==indexPath.row));\n',
+            '    @weakify(self);\n',
+            '    [(id<ViewDelegate>)cell viewModel:data action:^(id  _Nullable x) {\n',
+            '        @strongify(self);\n',
+            '        if ([self conformsToProtocol:@protocol(ViewDelegate)] && [self respondsToSelector:@selector(viewAction:)]) {\n',
+            '            return [(id<ViewDelegate>)self viewAction:x];\n',
+            '        }\n',
+            '    }];\n',
+            '    return cell;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    return 49;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section {\n',
+            '    return 10;\n',
+            '}\n\n',
+            '- (CGFloat)tableView:(UITableView *)tableView heightForFooterInSection:(NSInteger)section {\n',
+            '    return 0.001;\n',
+            '}\n\n',
+            '- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {\n',
+            '    NSString *uri = self.dataArray[indexPath.section][indexPath.row].target;\n',
+            '    [SZRouter pushUri:uri navi:self.navigationController];\n',
+            '}\n\n']
+
+# ======================================================================================================================
+# Getter 部分
 # ======================================================================================================================
 
 # Getters 部分
@@ -402,8 +491,9 @@ def lazy_txt(name, note):
             '- (UILabel *)%s {\n' % name,
             '    if (!_%s) {\n' % name,
             '        _%s = [[UILabel alloc] init];\n' % name,
-            '        _%s.font = [UIFont systemFontOfSize:12];\n' % name,
-            '        _%s.textColor = SZHexColor(555555);\n' % name,
+            '        _%s.font = UFBCFont(14);\n' % name,
+            '        _%s.textColor = SZHexColor(4c5b61);\n' % name,
+            '        _%s.text = @"%s";\n' % (name, note),
             '    }\n',
             '    return _%s;\n' % name,
             '}\n\n']
@@ -415,7 +505,7 @@ def lazy_btn(name, note):
             '        _%s = [UIButton buttonWithType:UIButtonTypeCustom];\n' % name,
             '        [_%s setTitle:@"按钮" forState:UIControlStateNormal];\n' % name,
             '        [_%s setTitleColor:SZHexColor(ffffff) forState:UIControlStateNormal];\n' % name,
-            '        _%s.titleLabel.font = [UIFont systemFontOfSize:17];\n' % name,
+            '        _%s.titleLabel.font = UFBCFont(17);\n' % name,
             '        [[_%s rac_signalForControlEvents:UIControlEventTouchUpInside] subscribeNext:^(UIControl *x) {\n' % name,
             ' \n',
             '        }];\n'
@@ -423,29 +513,78 @@ def lazy_btn(name, note):
             '    return _%s;\n' % name,
             '}\n\n']
 
-def lazy_tab(name, node):
+def lazy_tab(name, note):
     return ['- (UITableView *)%s {\n' % name,
             '    if (!_%s) {\n' % name,
-            '        _%s = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, LSScreenWidth, LSScreenHeight - 64) style:UITableViewStylePlain];\n' % name,
+            '        _%s = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT - 64) style:UITableViewStylePlain];\n' % name,
             '        _%s.separatorStyle = UITableViewCellSeparatorStyleNone;\n' % name,
             '        _%s.backgroundColor = SZHexColor(f0f3f5);\n' % name,
-            '        [_%s registerClass:NSClassFromString(CellClass) forCellReuseIdentifier:CellClass];\n' % name,
+            '        _%s.delegate = self;\n' % name,
+            '        _%s.dataSource = self;\n' % name,
+            '        [_%s registerClass:NSClassFromString(@"%s") forCellReuseIdentifier:NSStringFromClass(self.class)];\n' % (name, note),
             '    }\n',
             '    return _%s;\n' % name,
             '}\n\n']
 
 
-create_view(FLI, 'IconView', [('btn', 'selectedBtn', '选择按钮'),
-                              ('txt', 'title', '标题'),
-                              ('img', 'icon', '图片'),
-                              ('txt', 'sub', '子标题'),
-                              ('tab', 'tableView', ''),
-                              ('view', 'botline', '底线')])
-create_view(FLI, 'HomeView', [('btn', 'selectedBtn', '选择按钮'),
-                              ('txt', 'title', '标题'),
-                              ('img', 'icon', '图片'),
-                              ('txt', 'sub', '子标题'),
-                              ('tab', 'tableView', ''),
-                              ('view', 'botline', '底线')])
-create_vc(FLI, 'SZViewController', [('tab', 'tableView', ''),
-                                    ('multi', ['IconView', 'HoneView'], [0, 0])])
+# create_view(FLI, 'IconView', [('btn', 'selectedBtn', '选择按钮'),
+#                               ('txt', 'title', '标题'),
+#                               ('img', 'icon', '图片'),
+#                               ('txt', 'sub', '子标题'),
+#                               ('tab', 'tableView', ''),
+#                               ('view', 'botline', '底线')])
+# create_view(FLI, 'HomeView', [('btn', 'selectedBtn', '选择按钮'),
+#                               ('txt', 'title', '标题'),
+#                               ('img', 'icon', '图片'),
+#                               ('txt', 'sub', '子标题'),
+#                               ('tab', 'tableView', 'MineView'),
+#                               ('view', 'botline', '底线')])
+# create_vc(FLI, 'UFQSettingViewController', [('tab', 'tableView', 'MineView'),
+#                                     ('view', 'headerView', '')], 0)
+# create_view(FLI, 'HomeHeadView', [
+#                                 ('img', 'bgImg', '背景图片'),
+#                                 ('txt', 'title', '最高额度/可借额度'),
+#                                 ('txt', 'amount', '金额'),
+#                                 ('txt', 'content', '描述内容'),
+#                                 ('img', 'padImg', '分隔线'),
+#                                 ('btn', 'btn', '我要借款'),
+# ])
+#
+# create_view(FLI, 'HomeDetailView', [
+#                                 ('txt', 'content', '标题/内容'),
+#                                 ('img', 'arrow', '箭头'),
+# ])
+#
+# create_view(FLI, 'HomeBannerView', [
+#                                 ('txt', 'content', '标题/内容'),
+# ])
+#
+# create_view(FLI, 'HomeBannerView', [
+#                                 ('txt', 'content', '标题/内容'),
+# ])
+#
+# create_view(FLI, 'HomeIntroduceView', [
+#                                 ('txt', 'content', '标题/内容'),
+# ])
+# create_view(FLI, 'HomePaddingView', [])
+# create_vc(FLI, 'UFQBorrowSuccessViewController', [('view', 'bg', '白色背景'),
+# ('img', 'icon', '图标'),
+# ('txt', 'title', '成功描述'),
+# ('view', 'topline', '分割线'),
+# ('txt', 'amount', '金额'),
+# ('txt', 'bankInfo', '银行信息'),
+# ('view', 'botline', '底部分隔线'),
+# ('btn', 'goHome', '去首页'),
+# ('btn', 'goDetail', '借款详情')], 0)
+
+create_vc(FLI, 'UFQValidPhoneController', [
+('view', 'bg', '白色背景'),
+('txt', 'phone', '手机号'),
+('txt', 'phoneTF', '手机输入框'),
+('view', 'topline', '分割线'),
+('txt', 'code', '验证码'),
+('txt', 'codeTF', '验证码输入框'),
+('view', 'botline', '底部分隔线'),
+('view', 'padline', '验证码分割线'),
+('btn', 'btn', '下一步'),
+], 0)
