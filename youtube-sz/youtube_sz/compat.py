@@ -13,10 +13,10 @@ except NameError:
 
 
 try:
-    
     args = shlex.split('中文')
     assert (isinstance(args, list) and
             isinstance(args[0], compat_str) and
             args[0] == '中文')
     compat_shlex_split = shlex.split
 except (AssertionError, UnicodeEncodeError):
+    # 在一些python 2上解决unicode字符串的问题
