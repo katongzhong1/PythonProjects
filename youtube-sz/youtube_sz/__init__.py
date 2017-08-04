@@ -19,10 +19,26 @@ import random
 import sys
 
 
-from .options import (
+from options import (
+    parseOpts,
+)
 
+from utils import (
+    std_headers,
 )
 
 
 def _real_main(argv=None):
-    #
+    # windows 兼容性修复
+    if sys.platform == 'win32':
+        # https://github.com/rg3/youtube-dl/issues/820
+        codecs.register(lambda name: codecs.lookup('utf-8') if name == 'cp65001' else None)
+
+    parser, opts, args = parseOpts(argv)
+    # 设置 User-Agent
+    if opts.user_agent is not None:
+        std_headers['User-Agent'] = opts.user_agent
+    # 设置 referer
+    if opts.referer is not None:
+        std_headers['Referer'] = opts.referer
+    # 设置

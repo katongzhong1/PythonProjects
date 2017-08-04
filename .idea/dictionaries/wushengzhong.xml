@@ -1,16 +1,26 @@
 <component name="ProjectDictionaryState">
   <dictionary name="wushengzhong">
     <words>
+      <w>appdata</w>
       <w>arccos</w>
       <w>arcsin</w>
       <w>arctan</w>
+      <w>compat</w>
+      <w>eqre</w>
+      <w>fileno</w>
       <w>implent</w>
       <w>implentment</w>
+      <w>ipaddress</w>
       <w>katongzhong</w>
+      <w>nonbmp</w>
+      <w>optionf</w>
+      <w>preferredencoding</w>
       <w>prekin</w>
       <w>progammers</w>
       <w>ptype</w>
+      <w>referer</w>
       <w>sinh</w>
+      <w>testfunc</w>
       <w>zhong</w>
     </words>
   </dictionary>

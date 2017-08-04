@@ -1,6 +1,6 @@
 # coding: utf-8
 
-# 命令行参数
+# 返回 parse, opts, args
 
 from __future__ import unicode_literals
 
@@ -14,14 +14,44 @@ import re
 import sys
 
 from compat import (
-    compat_shlex_split,   #分解命令行的参数
-    compat_getenv,        #获取指定key的环境变量
-    compat_expanduser,    #获取全路径, 主要是替换路径中~和~user
-    compat_get_terminal_size, #获取终端大小(columns, lines)
+    # 分解命令行的参数
+    compat_shlex_split,
+    # 获取指定key的环境变量
+    compat_getenv,
+    # 获取全路径, 主要是替换路径中~和~user
+    compat_expanduser,
+    # 获取终端大小(columns, lines)
+    compat_get_terminal_size,
     compat_kwargs,
 )
 
+from utils import (
+    write_string,
+    # 获取编码方式
+    preferredencoding,
+)
+
 from verison import __version__
+
+
+# 隐藏登录相关的信息
+def _hide_login_info(opts):
+    PRIVATE_OPTS = {'-p', '--password', '-u', '--username', '--video-password', '--ap-password', '--ap-username'}
+    eqre = re.compile('^(?P<key>' + ('|'.join(re.escape(po) for po in PRIVATE_OPTS)) + ')=.+$')
+
+    def _scrub_eq(o):
+        m = eqre.match(o)
+        if m:
+            return m.group('key') + '=PRIVATE'
+        else:
+            return o
+
+    opts = list(map(_scrub_eq, opts))
+    for idx, opt in enumerate(opts):
+        if opt in PRIVATE_OPTS and idx + 1 < len(opts):
+            opts[idx + 1] = 'PRIVATE'
+    return opts
+
 
 # 获取命令行的参数
 def parseOpts(overrideArguments=None):
@@ -31,7 +61,8 @@ def parseOpts(overrideArguments=None):
         try:
             optionf = open(filename_bytes)
         except IOError:
-            return default  #如果文件不存在, 则默认跳过
+            # 如果文件不存在, 则默认跳过
+            return default
         try:
             #
             contents = optionf.read()
@@ -54,24 +85,22 @@ def parseOpts(overrideArguments=None):
             userConfFile = os.path.join(compat_expanduser('~'), '.config', 'youtube-dl', 'config')
             if not os.path.isfile(userConfFile):
                 userConfFile = os.path.join(compat_expanduser('~'), '.config', 'youtube-dl.conf')
-        userConf = _readOptions(userConfFile, None)
+        userConf = _readOptions(userConfFile)
 
         if userConf is None:
             appdata_dir = compat_getenv('appdata')
             if appdata_dir:
-                userConf = _readOptions(os.path.join(appdata_dir, 'youtube-dl', 'config'), default=None)
+                userConf = _readOptions(os.path.join(appdata_dir, 'youtube-dl', 'config'))
                 if userConf is None:
-                    userConf = _readOptions(os.path.join(appdata_dir, 'youtbue-dl', 'config.txt'), default=None)
+                    userConf = _readOptions(os.path.join(appdata_dir, 'youtube-dl', 'config.txt'))
 
         if userConf is None:
             userConf = _readOptions(
                 os.path.join(compat_expanduser('~'), 'youtube-dl.conf'),
-                default=None
             )
         if userConf is None:
             userConf = _readOptions(
                 os.path.join(compat_expanduser('~'), 'youtube-dl.conf.txt'),
-                default=None
             )
 
         if userConf is None:
@@ -81,7 +110,11 @@ def parseOpts(overrideArguments=None):
 
     # 格式化参数字符串  option 是什么类型
     def _format_option_string(option):
-        ''' ('-o', '--option') -> -o, --format METAVAR'''
+        # ('-o', '--option') -> -o, --format METAVAR
+        """
+
+        :type option: Option
+        """
         opts = []
 
         if option._short_opts:
@@ -96,7 +129,7 @@ def parseOpts(overrideArguments=None):
 
         return ''.join(opts)
 
-    def _commat_separated_values_options_callback(option, opt_str, value, parser):
+    def _comma_separated_values_options_callback(option, opt_str, value, parser):
         """setattr(object, name, values)
            给对象的属性赋值，若属性不存在，先创建再赋值。
         """
@@ -217,10 +250,10 @@ def parseOpts(overrideArguments=None):
     general.add_option(
         '--default-search',
         dest='default_search', metavar='PREFIX',
-        help='Use this prefix for unqualified URLs. For Example "gvsearch2:" download two videos from google videos for \
-        youtube-dl "large apple". Use the value "auto" to let youtube-dl guess ("auto_warning" to emit a warning when \
-        guessing). "error" just throws an error. The default value "fixup_error" repairs broken URLs, but emits an error \
-        if this is not possible instead of searching.'
+        help='Use this prefix for unqualified URLs. For Example "gvsearch2:" download two videos from google videos for '
+             'youtube-dl "large apple". Use the value "auto" to let youtube-dl guess. "error" just throws an error. The '
+             'default value "fixup_error" repairs broken URLs, but emits an error '
+             'if this is not possible instead of searching.'
     )
     # 忽略用户配置文件
     # 如果设置了全局配置文件(/etc/youtube-dl.conf),
@@ -412,17 +445,47 @@ def parseOpts(overrideArguments=None):
         help='Do not download any videos with more than COUNT views'
     )
 
+    parser.add_option_group(general)
+    parser.add_option_group(network)
+    parser.add_option_group(geo)
 
+    if overrideArguments is not None:
+        opts, args = parser.parse_args(overrideArguments)
+        if opts.verbose:
+            write_string('[debug] Override config:' + repr(overrideArguments) + '\n')
+    else:
+        def compat_conf(temp):
+            if sys.version_info < (3,):
+                return [a.decode(preferredencoding(), 'replace') for a in temp]
+            return temp
 
-print(os.path.join(compat_expanduser('~'), '.config', 'youtube-dl', 'config'))
+        command_line_conf = compat_conf(sys.argv[1:])
+        opts, args = parser.parse_args(command_line_conf)
 
+        system_conf = user_conf = custom_conf = []
 
+        if '--config-location' in command_line_conf:
+            location = compat_expanduser(opts.config_location)
+            if os.path.isdir(location):
+                location = os.path.join(location, 'youtube-dl.conf')
+            if not os.path.exists(location):
+                parser.error('config-location %s does not exist.' % location)
+            custom_conf = _readOptions(location)
+        elif '--ignore-config' in command_line_conf:
+            pass
+        else:
+            system_conf = _readOptions('/etc/youtube-dl.conf')
+            if '--ignore-config' not in system_conf:
+                user_conf = _readUserConf()
 
+        argv = system_conf + user_conf + custom_conf + command_line_conf
+        opts, args = parser.parse_args(argv)
+        if opts.verbose:
+            for conf_label, conf in (
+                    ('System config', system_conf),
+                    ('User config', user_conf),
+                    ('Custom config', custom_conf),
+                    ('Command-line args', command_line_conf)):
+                write_string('[debug] %s: %s\n' % (conf_label, repr(_hide_login_info(conf))))
 
-
-
-
-
-
-
-
+    return parser, opts, args
