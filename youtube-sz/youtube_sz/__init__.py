@@ -21,10 +21,12 @@ import sys
 
 from options import (
     parseOpts,
+    write_string,
 )
 
 from utils import (
     std_headers,
+    expand_path,
 )
 
 
@@ -41,4 +43,28 @@ def _real_main(argv=None):
     # 设置 referer
     if opts.referer is not None:
         std_headers['Referer'] = opts.referer
-    # 设置
+    # 设置 HTTP headers
+    if opts.headers is not None:
+        for h in opts.headers:
+            if ':' not in h:
+                parser.error('wrong header formatting, it should be key:value, not "%s"' % h)
+            key, value = h.split(':', 1)
+            if opts.verbose:
+                write_string('[debug] Adding header from command line option %s:%s\n' % (key, value))
+            std_headers[key] = value
+    # 如果设置了 --dump-user-agent 则输出标识
+    if opts.dump_user_agent:
+        write_string(std_headers['User-Agent'] + '\n', out=sys.stdout)
+        sys.exit(0)
+    # 批量文件验证
+    batch_urls = []
+    if opts.batchfile is not None:
+        try:
+            if opts.batchfile == '-':
+                batchfd = sys.stdin
+            else:
+                batchfd = io.open(
+                    expand_path(opts.batchfile),
+                    'r', encoding='utf-8', errors='ignore'
+                )
+            batch_urls

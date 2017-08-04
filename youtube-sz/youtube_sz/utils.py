@@ -5,10 +5,12 @@ from __future__ import unicode_literals
 
 import sys
 import io
+import os
 import locale
 
 from compat import (
     compat_str,   # 字符串类型
+    compat_expanduser,
 )
 
 # 默认请求头
@@ -19,6 +21,10 @@ std_headers = {
     'Accept-Encoding': 'gzip, deflate',
     'Accept-Language': 'en-us,en;q=0.5',
 }
+
+#
+def expand_path(s):
+    return os.path.expandvars(compat_expanduser(s))
 
 
 # 获取系统编码方式

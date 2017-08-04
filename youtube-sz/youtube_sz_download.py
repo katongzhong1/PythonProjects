@@ -69,8 +69,3 @@ def download_url(url=None):
         ydl.download([url])
 
 #download_url('https://www.youtube.com/watch?v=8bvKMzUaDGw')
-
-response = urllib2.urlopen('http://www.ip.cn')
-html = response.read()
-ip = re.search(r'<code>(.*?)</code>', html)
-print(ip)
