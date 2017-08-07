@@ -5,24 +5,67 @@
       <w>arccos</w>
       <w>arcsin</w>
       <w>arctan</w>
+      <w>audioquality</w>
+      <w>autonumber</w>
+      <w>bestaudio</w>
+      <w>bidiv</w>
+      <w>bkmgtpezy</w>
+      <w>buffersize</w>
       <w>compat</w>
+      <w>convertor</w>
       <w>eqre</w>
+      <w>exabytes</w>
+      <w>exbibytes</w>
+      <w>ffmpeg</w>
       <w>fileno</w>
+      <w>filesize</w>
+      <w>flac</w>
+      <w>fmpeg</w>
+      <w>fribidi</w>
+      <w>gibibytes</w>
       <w>implent</w>
       <w>implentment</w>
+      <w>intval</w>
       <w>ipaddress</w>
       <w>katongzhong</w>
+      <w>kibibytes</w>
+      <w>matchobj</w>
+      <w>mebibytes</w>
+      <w>mult</w>
       <w>nonbmp</w>
+      <w>nopostoverwrites</w>
       <w>optionf</w>
+      <w>outtmpl</w>
+      <w>pebibytes</w>
+      <w>petabytes</w>
+      <w>postprocessors</w>
+      <w>preferredcodec</w>
       <w>preferredencoding</w>
+      <w>preferredformat</w>
+      <w>preferredquality</w>
       <w>prekin</w>
       <w>progammers</w>
       <w>ptype</w>
+      <w>quotedstrval</w>
+      <w>ratelimit</w>
       <w>referer</w>
       <w>sinh</w>
+      <w>strval</w>
+      <w>tebibytes</w>
       <w>testfunc</w>
+      <w>titleformat</w>
+      <w>twofactor</w>
+      <w>usenetrc</w>
+      <w>videopassword</w>
+      <w>vorbis</w>
+      <w>webm</w>
       <w>writeinfojson</w>
+      <w>writesubtitles</w>
       <w>writethumbnail</w>
+      <w>yobibytes</w>
+      <w>yottabytes</w>
+      <w>zebibytes</w>
+      <w>zettabytes</w>
       <w>zhong</w>
     </words>
   </dictionary>

@@ -12,6 +12,7 @@ import shutil
 import collections
 #
 import subprocess
+import getpass
 
 # 编码方式
 try:
@@ -177,6 +178,17 @@ except TypeError:
         return dict((bytes(k), v) for k, v in kwargs.items())
 else:
     compat_kwargs = lambda kwargs: kwargs
+
+
+if sys.version_info < (3, 0) and sys.platform == 'win32':
+    def compat_getpass(promt, *args, **kwargs):
+        if isinstance(promt, compat_str):
+            from .utils import preferredencoding
+            promt = promt.encode(preferredencoding())
+        return getpass.getpass(promt, *args, **kwargs)
+else:
+    compat_getpass = getpass.getpass
+
 
 __all__ = [
     'compat_shlex_split',  # 分解命令行的参数
